@@ -24,25 +24,23 @@ module Langchain::LLM
     end
 
     def to_params(params = {})
-      # if params are provided, reset any previously initialized
-      @parameters = params if !params.empty?
-      @parameters = (@parameters || {}).merge!(params).slice(*schema.keys)
+      parameters = (@parameters || {}).merge!(params).slice(*schema.keys)
       @aliases.each do |field, aliased_keys|
         # favor existing keys in case of conflicts,
         # and check for multiples
         aliased_keys.each do |alias_key|
-          @parameters[field] ||= params[alias_key] if value_present?(params[alias_key])
+          parameters[field] ||= params[alias_key] if value_present?(params[alias_key])
         end
       end
       @schema.each do |field, param_options|
         param_options ||= {}
         default = param_options[:default]
-        @parameters[field] ||= default if value_present?(default)
+        parameters[field] ||= default if value_present?(default)
       end
       @remapped.each do |field, renamed_field|
-        @parameters[renamed_field] = @parameters[field] if value_present?(@parameters[field])
+        parameters[renamed_field] = parameters[field] if value_present?(parameters[field])
       end
-      @parameters = @parameters.except(*@ignored + @remapped.keys)
+      parameters.except(*@ignored + @remapped.keys)
     end
 
     def remap(field_map)
